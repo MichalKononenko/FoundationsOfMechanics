@@ -20,8 +20,8 @@ class CustomTopology(AbstractToplogy):
         :param elements: The elements of the topology
         :param open_sets: The open sets in the topology
         """
-        self._elements = elements
-        self._open_sets = open_sets
+        self._elements = frozenset(elements)
+        self._open_sets = frozenset(open_sets)
 
         self._assert_first_axiom(elements, open_sets)
         self._assert_second_axiom(open_sets)

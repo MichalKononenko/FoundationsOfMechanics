@@ -6,7 +6,7 @@ from typing import Set, FrozenSet, Union, TypeVar
 from src.topologies.custom_topology import CustomTopology
 from src.interfaces import Topology
 from hypothesis import given
-from .generators import topologies
+from test.unit.generators import topologies
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
