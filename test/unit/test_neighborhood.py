@@ -3,6 +3,7 @@ import unittest
 from hypothesis import given, assume
 from src.interfaces import Topology
 from src.neighborhood import is_neighborhood, is_open_neighborhood
+from src.neighborhood import is_set_open_neighborhood
 
 
 class TestIsNeighborhood(unittest.TestCase):
@@ -41,4 +42,21 @@ class TestIsOpenNeighborhood(unittest.TestCase):
         first_element = next(iter(topology.elements))
         self.assertTrue(
             is_open_neighborhood(first_element, topology.elements, topology)
+        )
+
+
+class TestSetIsOpenNeighborhood(unittest.TestCase):
+    """
+    Contains tests for the set open neighborhood
+    """
+    @given(topologies())
+    def test_is_set_open(self, topology: Topology) -> None:
+        """
+
+        :param topology: The topology to check
+        """
+        assume(topology.elements != frozenset())
+        first_set = next(iter(topology.open_sets))
+        self.assertTrue(
+            is_set_open_neighborhood(first_set, first_set, topology)
         )
