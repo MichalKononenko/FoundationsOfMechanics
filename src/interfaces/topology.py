@@ -35,6 +35,15 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
+    @property
+    def closed_sets(self) -> ANY_SET[ANY_SET]:
+        """
+
+        :return: The closed sets for the topology. A closed set is a set whose
+            complement is an open set
+        """
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def get_open_neighborhoods(
             self, point_or_set: Union[T, ANY_SET]

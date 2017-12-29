@@ -14,6 +14,16 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
     Base class for topologies with a finite number of elements. This means that
     the open sets of the topology can be iterated through
     """
+    @property
+    def closed_sets(self) -> ANY_SET:
+        """
+
+        :return: The closed sets in the topology
+        """
+        return frozenset(
+            self.elements.difference(open_set) for open_set in self.open_sets
+        )
+
     def get_open_neighborhoods(
             self, point_or_set: Union[T, ANY_SET]
     ) -> Optional[Tuple[ANY_SET]]:
