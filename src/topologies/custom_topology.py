@@ -2,7 +2,7 @@
 Defines a topology where sets and open sets are given by the user on
 construction
 """
-from src.interfaces import Topology as AbstractToplogy
+from .finite_topology import FiniteTopology
 from typing import Set, TypeVar, Union, FrozenSet
 from src.exceptions import InvalidOpenSets
 
@@ -10,7 +10,7 @@ T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
 
 
-class CustomTopology(AbstractToplogy):
+class CustomTopology(FiniteTopology):
     """
     Implements a topology where open sets and elements are given by the user
     """
@@ -48,7 +48,7 @@ class CustomTopology(AbstractToplogy):
             elements: ANY_SET,
             open_sets: ANY_SET[ANY_SET]
     ) -> None:
-        if set() not in open_sets:
+        if (set() not in open_sets) or (frozenset() not in open_sets):
             raise InvalidOpenSets(
                 'The open sets given do not contain the empty set'
             )
@@ -78,12 +78,3 @@ class CustomTopology(AbstractToplogy):
                         'The union of the sets {0} and {1} is not an open set '
                         'in {2}'.format(first_set, second_set, open_sets)
                     )
-
-    def __repr__(self) -> str:
-        """
-
-        :return: A user-friendly representation of the topology
-        """
-        return '{0}(elements={1}, open_sets={2})'.format(
-            self.__class__.__name__, self.elements, self.open_sets
-        )

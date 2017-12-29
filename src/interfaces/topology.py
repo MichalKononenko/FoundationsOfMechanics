@@ -2,7 +2,7 @@
 Defines a topological space
 """
 import abc
-from typing import Set, Generic, TypeVar, FrozenSet, Union
+from typing import Set, Generic, TypeVar, FrozenSet, Union, Tuple, Optional
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
@@ -32,5 +32,17 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         """
 
         :return: The open sets in the topology.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_open_neighborhoods(
+            self, point_or_set: Union[T, ANY_SET]
+    ) -> Optional[Tuple[ANY_SET]]:
+        """
+
+        :param point_or_set: The point or set for which the open neighborhoods
+            are to be obtained
+        :return: The collection of open neighborhoods
         """
         raise NotImplementedError()

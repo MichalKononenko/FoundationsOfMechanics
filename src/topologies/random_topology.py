@@ -1,15 +1,15 @@
 """
 Describes how to generate a random topology from a set of elements
 """
-from src.interfaces import Topology as AbstractTopology
-from typing import Set, TypeVar, Union, FrozenSet, Optional
+from .finite_topology import FiniteTopology
+from typing import Set, TypeVar, Union, FrozenSet
 from random import randint, sample
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
 
 
-class RandomTopology(AbstractTopology):
+class RandomTopology(FiniteTopology):
     """
     Describes a topology where the open sets are made randomly using the
     following algorithm
