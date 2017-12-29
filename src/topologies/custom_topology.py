@@ -2,9 +2,9 @@
 Defines a topology where sets and open sets are given by the user on
 construction
 """
-from .interfaces import Topology as AbstractToplogy
+from src.interfaces import Topology as AbstractToplogy
 from typing import Set, TypeVar, Union, FrozenSet
-from .exceptions import InvalidOpenSets
+from src.exceptions import InvalidOpenSets
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]

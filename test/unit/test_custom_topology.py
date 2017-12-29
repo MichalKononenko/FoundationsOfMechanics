@@ -3,7 +3,7 @@ Contains tests for the custom topology
 """
 import unittest
 from typing import Set, FrozenSet, Union, TypeVar
-from src.custom_topology import CustomTopology
+from src.topologies.custom_topology import CustomTopology
 from src.interfaces import Topology
 from hypothesis import given
 from .generators import topologies
