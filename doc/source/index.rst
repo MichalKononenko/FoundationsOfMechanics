@@ -12,6 +12,7 @@ Welcome to Foundations of Mechanics's documentation!
 
    interfaces
    implementations
+   tests/index
 
 
 Indices and tables

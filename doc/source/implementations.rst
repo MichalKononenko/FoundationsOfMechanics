@@ -6,6 +6,13 @@ API For Implementations
 Custom Topology
 ---------------
 
-.. automodule:: custom_topology
+.. automodule:: src.topologies.custom_topology
+    :members:
+    :private-members:
+
+Random Topology
+---------------
+
+.. automodule:: src.topologies.random_topology
     :members:
     :private-members:
