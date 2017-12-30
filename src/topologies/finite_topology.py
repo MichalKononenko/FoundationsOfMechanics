@@ -3,6 +3,7 @@ Base class for topologies with a finite number of elements
 """
 import abc
 from typing import Set, TypeVar, Union, FrozenSet, Tuple, Optional
+from .product_topology import ProductTopology
 from src.interfaces import Topology
 
 T = TypeVar('T')
@@ -82,3 +83,6 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
         return '{0}(elements={1}, open_sets={2})'.format(
             self.__class__.__name__, self.elements, self.open_sets
         )
+
+    def __mul__(self, other: Topology) -> Topology:
+        return ProductTopology(self, other)

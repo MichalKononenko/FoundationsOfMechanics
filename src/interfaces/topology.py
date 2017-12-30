@@ -55,3 +55,6 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         :return: The collection of open neighborhoods
         """
         raise NotImplementedError()
+
+    def __mul__(self, other: 'Topology') -> 'Topology':
+        raise NotImplementedError()

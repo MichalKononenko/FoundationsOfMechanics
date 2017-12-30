@@ -3,8 +3,13 @@ Contains unit tests for the finite topology
 """
 import unittest
 from hypothesis import given, assume
+from hypothesis.strategies import lists
 from ..generators import topologies
 from src.interfaces import Topology
+from functools import reduce
+from typing import List
+import operator
+from src.topologies import EmptyTopology
 
 
 class TestFiniteTopology(unittest.TestCase):
@@ -55,3 +60,20 @@ class TestGetOpenNeighborhoods(TestFiniteTopology):
             self.assertIn(
                 topology.elements.difference(closed_set), topology.open_sets
             )
+
+
+class TestProduct(TestFiniteTopology):
+    """
+    Tests that multiplying two finite topologies together produces a product
+    topology
+    """
+    @given(lists(topologies()))
+    def test_multiplication(self, topology_list: List[Topology]):
+        product = reduce(operator.mul, topology_list, EmptyTopology())
+        self.assertIsInstance(product, Topology)
+        elements = reduce(
+            lambda x, y: x.union(y),
+            map(lambda x: x.elements, topology_list),
+            set()
+        )
+        self.assertEqual(elements, product.elements)
