@@ -56,5 +56,10 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def __mul__(self, other: 'Topology') -> 'Topology':
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def __eq__(self, other: 'Topology') -> 'Topology':
         raise NotImplementedError()

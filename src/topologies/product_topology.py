@@ -59,3 +59,6 @@ class ProductTopology(ProductTopologyInterface):
         return '{0}(elements={1}, open_sets={2})'.format(
             self.__class__.__name__, self.elements, self.open_sets
         )
+
+    def __eq__(self, other: Topology) -> Topology:
+        return self.open_sets == other.open_sets

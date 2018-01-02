@@ -5,7 +5,7 @@ import unittest
 from src.interfaces import Topology
 from src.topologies import RelativeTopology, CustomTopology
 from hypothesis import given, assume
-from ..generators import topologies
+from test.unit.generators import topologies
 
 
 class TestRelativeTopology(unittest.TestCase):

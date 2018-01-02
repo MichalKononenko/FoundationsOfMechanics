@@ -86,3 +86,6 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
 
     def __mul__(self, other: Topology) -> Topology:
         return ProductTopology(self, other)
+
+    def __eq__(self, other: Topology) -> bool:
+        return self.open_sets == other.open_sets

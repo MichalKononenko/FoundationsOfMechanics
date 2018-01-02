@@ -26,3 +26,5 @@ class EmptyTopology(Topology):
     def __mul__(self, other: Topology) -> Topology:
         return other
 
+    def __eq__(self, other: Topology) -> bool:
+        return isinstance(other, self.__class__)

@@ -4,7 +4,7 @@ Contains unit tests for the finite topology
 import unittest
 from hypothesis import given, assume
 from hypothesis.strategies import lists
-from ..generators import topologies
+from test.unit.generators import topologies
 from src.interfaces import Topology
 from functools import reduce
 from typing import List
@@ -36,19 +36,6 @@ class TestGetOpenNeighborhoods(TestFiniteTopology):
         self.assertGreater(len(open_neighborhoods), 0)
 
     @given(topologies())
-    def test_get_open_neighborhood_of_set(self, topology: Topology) -> None:
-        """
-
-        :param topology: The topology for which open neighborhoods are to be
-            obtained
-        """
-        assume(frozenset(topology.elements) != frozenset())
-        first_point = frozenset({next(iter(topology.elements))})
-        open_neighborhoods = topology.get_open_neighborhoods(first_point)
-        self.assertIsNotNone(open_neighborhoods)
-        self.assertGreater(len(open_neighborhoods), 0)
-
-    @given(topologies())
     def test_closed_sets(self, topology: Topology) -> None:
         """
         Test that the complement of the closed sets of the topology are open
@@ -69,6 +56,13 @@ class TestProduct(TestFiniteTopology):
     """
     @given(lists(topologies()))
     def test_multiplication(self, topology_list: List[Topology]):
+        """
+        Tests that multiplying random topologies yields a topology with
+        elements being the union of all elements in each topology.
+
+        :param topology_list: A list of randomly-generated topologies to
+            multiply
+        """
         product = reduce(operator.mul, topology_list, EmptyTopology())
         self.assertIsInstance(product, Topology)
         elements = reduce(
