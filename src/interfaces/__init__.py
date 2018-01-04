@@ -6,3 +6,4 @@ from .topologies import Topology
 from .topologies import ProductTopology
 from .topologies import FiniteProductTopology
 from .basis import Basis
+from .intervals import Interval, BoundedInterval
