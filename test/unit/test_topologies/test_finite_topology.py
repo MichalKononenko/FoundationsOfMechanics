@@ -4,12 +4,15 @@ Contains unit tests for the finite topology
 import unittest
 from hypothesis import given, assume
 from hypothesis.strategies import lists
-from test.unit.generators import topologies
+from test.unit.generators import topologies, topological_subsets
+from test.unit.generators import TopologicalSubset
 from src.interfaces import Topology
 from functools import reduce
-from typing import List
+from typing import List, TypeVar
 import operator
 from src.topologies import EmptyTopology
+
+T = TypeVar('T')
 
 
 class TestFiniteTopology(unittest.TestCase):
@@ -47,6 +50,63 @@ class TestGetOpenNeighborhoods(TestFiniteTopology):
             self.assertIn(
                 topology.elements.difference(closed_set), topology.open_sets
             )
+
+
+class TestComplement(TestFiniteTopology):
+    """
+    Contains unit tests for the complement function
+    """
+    @given(topologies())
+    def test_complement(self, topology: Topology[int]) -> None:
+        """
+        The complement of the complement of a set should be the same set
+
+        :param topology: The topology on which the complement is to be tested
+        """
+        for open_set in topology.open_sets:
+            self.assertEqual(
+                open_set,
+                topology.complement(topology.complement(open_set))
+            )
+
+
+class TestBoundary(TestFiniteTopology):
+    """
+    Contains unit tests for the boundary function
+    """
+    @given(topological_subsets())
+    def test_boundary_is_closed(
+            self,
+            test_parameters: TopologicalSubset
+    ) -> None:
+        """
+        Check that the boundary of a set is closed
+
+        :param test_parameters: The topology and subset on which this test is to be
+            run
+        """
+        self.assertIn(
+            test_parameters.topology.boundary(test_parameters.subset),
+            test_parameters.topology.closed_sets
+        )
+
+    @given(topological_subsets())
+    def test_boundary_is_equal_to_complement(
+            self,
+            test_parameters: TopologicalSubset
+    ) -> None:
+        """
+
+        :param test_parameters: The parameters for the test, containing a
+            topology, and a subset of the elements of the topology. These
+        :return:
+        """
+        self.assertEqual(
+            test_parameters.topology.boundary(test_parameters.subset),
+            test_parameters.topology.boundary(
+                test_parameters.topology.complement(test_parameters.subset)
+            )
+        )
 
 
 class TestProduct(TestFiniteTopology):

@@ -5,6 +5,9 @@ import abc
 from typing import Set, TypeVar, Union, FrozenSet, Tuple, Optional
 from .product_topology import ProductTopology
 from src.interfaces import Topology
+from src.exceptions import InvalidSubset
+from functools import reduce
+import operator
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
@@ -16,7 +19,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
     the open sets of the topology can be iterated through
     """
     @property
-    def closed_sets(self) -> ANY_SET:
+    def closed_sets(self) -> ANY_SET[T]:
         """
 
         :return: The closed sets in the topology
@@ -44,6 +47,51 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
 
         return open_sets
 
+    def complement(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+        """
+
+        :param subset: The subset for which the complement is to be retrieved
+        :return: The complement
+        """
+        self._assert_subset(subset)
+        return self.elements.difference(subset)
+
+    def closure(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+        """
+
+        :param subset: The subset for which the closure is to be calculated
+        :return: The closure
+        """
+        self._assert_subset(subset)
+        s = frozenset(subset)
+        return reduce(
+            operator.and_,
+            filter(s.issubset, self.closed_sets),
+            set()
+        )
+
+    def interior(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+        """
+
+        :param subset: The subset for which the interior is to be calculated
+        :return: The interior
+        """
+        self._assert_subset(subset)
+        return reduce(
+            operator.or_,
+            filter(subset.issubset, self.open_sets),
+            set()
+        )
+
+    def boundary(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+        """
+
+        :param subset: The subset for which the boundary is to be calculated
+        :return: The boundary
+        """
+        self._assert_subset(subset)
+        return self.closure(subset) and self.closure(self.complement(subset))
+
     @property
     def _is_empty_topology(self) -> bool:
         """
@@ -55,7 +103,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
     def _is_point(self, point_or_set: Union[T, ANY_SET]) -> bool:
         return isinstance(point_or_set, next(iter(self.elements)).__class__)
 
-    def _get_open_neighborhoods_for_point(self, point: T) -> Tuple[ANY_SET]:
+    def _get_open_neighborhoods_for_point(self, point: T) -> Tuple[ANY_SET[T]]:
         """
 
         :param point: The point for which open neighborhoods are to be returned
@@ -74,6 +122,17 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
         return tuple(
             open_set for open_set in self.open_sets if set.issubset(open_set)
         )
+
+    def _assert_subset(self, subset: ANY_SET[T]) -> None:
+        """
+
+        :param subset:
+        :return:
+        """
+        if not self.elements.issuperset(subset):
+            raise InvalidSubset(
+                'The set %s is not a subset of %s' % subset, self.elements
+            )
 
     def __repr__(self) -> str:
         """
