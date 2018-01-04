@@ -1,6 +1,8 @@
 """
 Contains abstract interfaces for components in this library
 """
-from .topology import Topology, T, ANY_SET
-from .product_topology import ProductTopology
+from .topologies import FiniteTopology
+from .topologies import Topology
+from .topologies import ProductTopology
+from .topologies import FiniteProductTopology
 from .basis import Basis

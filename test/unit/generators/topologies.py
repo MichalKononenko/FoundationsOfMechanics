@@ -1,12 +1,12 @@
 from hypothesis.strategies import composite, integers, frozensets
-from src.interfaces import Topology as AbstractTopology
+from src.interfaces import FiniteTopology as AbstractTopology
 from src.topologies import RandomTopology
 
 
 @composite
 def topologies(
         draw, elements=frozensets(integers()), number_of_rounds=5
-) -> AbstractTopology:
+) -> AbstractTopology[int]:
     """
 
     :param draw: A function provided by the hypothesis library that knows how

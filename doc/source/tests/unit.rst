@@ -5,26 +5,6 @@ Unit Tests
     :members:
     :private-members:
 
-Generators
-----------
-
-.. automodule:: test.unit.generators.__init__
-    :members:
-
-Bases
-~~~~~
-
-.. automodule:: test.unit.generators.bases
-    :members:
-    :private-members:
-
-Topologies
-~~~~~~~~~~
-
-.. automodule:: test.unit.generators.topologies
-    :members:
-    :private-members:
-
 Test Bases
 ----------
 

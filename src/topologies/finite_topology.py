@@ -2,44 +2,45 @@
 Base class for topologies with a finite number of elements
 """
 import abc
-from typing import Set, TypeVar, Union, FrozenSet, Tuple, Optional
-from .product_topology import ProductTopology
+from typing import Set, TypeVar, Union, Generic
+from .finite_product_topology import FiniteProductTopology
 from src.interfaces import Topology
+from src.interfaces import FiniteTopology as FiniteTopologyInterface
 from src.exceptions import InvalidSubset
 from functools import reduce
 import operator
 
 T = TypeVar('T')
-ANY_SET = Union[Set[T], FrozenSet[T], set]
+X = TypeVar('Y')
 
 
-class FiniteTopology(Topology, metaclass=abc.ABCMeta):
+class FiniteTopology(
+    FiniteTopologyInterface[T], Generic[T], metaclass=abc.ABCMeta
+):
     """
     Base class for topologies with a finite number of elements. This means that
     the open sets of the topology can be iterated through
     """
     @property
-    def closed_sets(self) -> ANY_SET[T]:
+    def closed_sets(self) -> Set[Set[T]]:
         """
 
         :return: The closed sets in the topology
         """
-        return frozenset(
-            self.elements.difference(open_set) for open_set in self.open_sets
-        )
+        closed_sets = frozenset(
+            self.complement(open_set) for open_set in self.open_sets
+        )  # type: Set[Set[T]]
+        return closed_sets
 
     def get_open_neighborhoods(
-            self, point_or_set: Union[T, ANY_SET]
-    ) -> Optional[Tuple[ANY_SET]]:
+            self, point_or_set: Union[T, Set[T]]
+    ) -> Set[Set[T]]:
         """
 
         :param point_or_set: The point or set for which open neighborhoods
             are to be located
         :return: The collection of elements
         """
-        if self._is_empty_topology:
-            return None
-
         if self._is_point(point_or_set):
             open_sets = self._get_open_neighborhoods_for_point(point_or_set)
         else:
@@ -47,7 +48,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
 
         return open_sets
 
-    def complement(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def complement(self, subset: Set[T]) -> Set[T]:
         """
 
         :param subset: The subset for which the complement is to be retrieved
@@ -56,7 +57,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
         self._assert_subset(subset)
         return self.elements.difference(subset)
 
-    def closure(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def closure(self, subset: Set[T]) -> Set[T]:
         """
 
         :param subset: The subset for which the closure is to be calculated
@@ -70,7 +71,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
             set()
         )
 
-    def interior(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def interior(self, subset: Set[T]) -> Set[T]:
         """
 
         :param subset: The subset for which the interior is to be calculated
@@ -83,7 +84,7 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
             set()
         )
 
-    def boundary(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def boundary(self, subset: Set[T]) -> Set[T]:
         """
 
         :param subset: The subset for which the boundary is to be calculated
@@ -100,34 +101,39 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
         """
         return frozenset(self.open_sets) == frozenset(frozenset())
 
-    def _is_point(self, point_or_set: Union[T, ANY_SET]) -> bool:
+    def _is_point(self, point_or_set: Union[T, Set[T]]) -> bool:
         return isinstance(point_or_set, next(iter(self.elements)).__class__)
 
-    def _get_open_neighborhoods_for_point(self, point: T) -> Tuple[ANY_SET[T]]:
+    def _get_open_neighborhoods_for_point(self, point: T) -> Set[Set[T]]:
         """
 
         :param point: The point for which open neighborhoods are to be returned
         :return: The open neighborhoods for this point
         """
-        return tuple(
+        neighborhoods = frozenset(
             open_set for open_set in self.open_sets if point in open_set
-        )
+        )  # type: Set[Set[T]]
+        return neighborhoods
 
-    def _get_open_neighborhoods_for_set(self, set: ANY_SET) -> Tuple[ANY_SET]:
+    def _get_open_neighborhoods_for_set(self, set_: Set[T]) -> Set[Set[T]]:
         """
 
-        :param set: The set for which open neighborhoods are to be returned
+        :param set_: The set for which open neighborhoods are to be returned
         :return: The open neighborhoods for this set
         """
-        return tuple(
-            open_set for open_set in self.open_sets if set.issubset(open_set)
-        )
+        neighborhoods = frozenset(
+            open_set for open_set in self.open_sets if open_set.issuperset(
+                set_)
+        )  # type: Set[Set[T]]
+        return neighborhoods
 
-    def _assert_subset(self, subset: ANY_SET[T]) -> None:
+    def _assert_subset(self, subset: Set[T]) -> None:
         """
 
-        :param subset:
-        :return:
+        Checks that the set is a subset of the elements of the elements of the
+        topology. If it is not, raise a :class:`InvalidSubset` error
+
+        :param subset: The argument to check
         """
         if not self.elements.issuperset(subset):
             raise InvalidSubset(
@@ -143,8 +149,10 @@ class FiniteTopology(Topology, metaclass=abc.ABCMeta):
             self.__class__.__name__, self.elements, self.open_sets
         )
 
-    def __mul__(self, other: Topology) -> Topology:
-        return ProductTopology(self, other)
+    def __mul__(
+            self, other: FiniteTopologyInterface[X]
+    ) -> FiniteProductTopology[T, X]:
+        return FiniteProductTopology(self, other)
 
-    def __eq__(self, other: Topology) -> bool:
+    def __eq__(self, other: Topology[T]) -> bool:
         return self.open_sets == other.open_sets

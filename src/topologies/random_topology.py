@@ -2,14 +2,13 @@
 Describes how to generate a random topology from a set of elements
 """
 from .finite_topology import FiniteTopology
-from typing import Set, TypeVar, Union, FrozenSet
+from typing import Set, TypeVar, Union, FrozenSet, Generic
 from random import randint, sample
 
 T = TypeVar('T')
-ANY_SET = Union[Set[T], FrozenSet[T], set]
 
 
-class RandomTopology(FiniteTopology):
+class RandomTopology(FiniteTopology, Generic[T]):
     """
     Describes a topology where the open sets are made randomly using the
     following algorithm
@@ -21,7 +20,7 @@ class RandomTopology(FiniteTopology):
     """
     def __init__(
             self,
-            elements: ANY_SET,
+            elements: Set[T],
             number_of_randomizing_rounds: int=5
     ):
         """
@@ -42,7 +41,7 @@ class RandomTopology(FiniteTopology):
         self._open_sets = open_sets
 
     @staticmethod
-    def _add_to_open_sets(elements: ANY_SET, open_sets: Set[ANY_SET]) -> None:
+    def _add_to_open_sets(elements: Set[T], open_sets: Set[Set[T]]) -> None:
         first_random_set = frozenset(
             sample(elements, randint(0, len(elements)))
         )
@@ -55,7 +54,7 @@ class RandomTopology(FiniteTopology):
         open_sets.add(first_random_set.intersection(second_random_set))
 
     @property
-    def elements(self) -> ANY_SET:
+    def elements(self) -> Set[T]:
         """
 
         :return: The elements of the topology
@@ -63,7 +62,7 @@ class RandomTopology(FiniteTopology):
         return self._elements
 
     @property
-    def open_sets(self) -> ANY_SET[ANY_SET]:
+    def open_sets(self) -> Set[Set[T]]:
         """
 
         :return: The open sets

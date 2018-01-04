@@ -38,6 +38,13 @@ Empty Topology
     :members:
     :private-members:
 
+Finite Product Topology
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: src.topologies.finite_product_topology
+    :members:
+    :private-members:
+
 Finite Topology
 ~~~~~~~~~~~~~~~
 
@@ -45,12 +52,6 @@ Finite Topology
     :members:
     :private-members:
 
-Product Topology
-~~~~~~~~~~~~~~~~
-
-.. automodule:: src.topologies.product_topology
-    :members:
-    :private-members:
 
 Random Topology
 ~~~~~~~~~~~~~~~

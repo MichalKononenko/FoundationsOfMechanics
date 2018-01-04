@@ -1,11 +1,11 @@
 """
-Defines a topological space
+Provides the most general definition of topological space
 """
 import abc
-from typing import Set, Generic, TypeVar, FrozenSet, Union, Tuple, Optional
+from typing import Generic, TypeVar, Union, Container
 
 T = TypeVar('T')
-ANY_SET = Union[Set[T], FrozenSet[T], set]
+Y = TypeVar('Y')
 
 
 class Topology(Generic[T], metaclass=abc.ABCMeta):
@@ -16,10 +16,18 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
     * The empty set and the set are in the collection of open sets
     * The intersection of any two open sets is in the set
     * The union of any two open sets is in the set
+
+    .. note::
+
+        Since this is the most general type of topology, this interface can
+        only provide a class:`python.typing.Container` for the elements and
+        open sets. This allows for representations of uncountably-infinite
+        topologies. Finite topologies are refined in sub-interfaces.
+
     """
     @property
     @abc.abstractmethod
-    def elements(self) -> ANY_SET[T]:
+    def elements(self) -> Container[T]:
         """
 
         :return: The elements in this topology
@@ -28,7 +36,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def open_sets(self) -> ANY_SET[ANY_SET[T]]:
+    def open_sets(self) -> Container[Container[T]]:
         """
 
         :return: The open sets in the topology.
@@ -36,7 +44,8 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def closed_sets(self) -> ANY_SET[ANY_SET[T]]:
+    @abc.abstractmethod
+    def closed_sets(self) -> Container[Container[T]]:
         """
 
         :return: The closed sets for the topology. A closed set is a set whose
@@ -46,18 +55,21 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_open_neighborhoods(
-            self, point_or_set: Union[T, ANY_SET]
-    ) -> Optional[Tuple[ANY_SET]]:
-        """
+            self, point_or_set: Union[T, Container[T]]
+    ) -> Container[Container[T]]:
+        r"""
 
         :param point_or_set: The point or set for which the open neighborhoods
             are to be obtained
-        :return: The collection of open neighborhoods
+        :return: The open neighborhoods. An open neighborhood :math:`U` for a
+            point :math`u` in the topology (:math:`u \in S` where :math:`S` is
+            the set of elements in the topology) is the collection of all open
+            sets that contain the point.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def closure(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def closure(self, subset: Container[T]) -> Container[T]:
         """
 
         :param subset: The subset of the elements of the topology for which
@@ -68,7 +80,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def interior(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def interior(self, subset: Container[T]) -> Container[T]:
         """
 
         :param subset: The subset for which the interior is to be calculated
@@ -78,16 +90,17 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def boundary(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def boundary(self, subset: Container[T]) -> Container[T]:
         """
 
         :param subset: The subset for which the boundary is to be calculated
-        :return: The boundary of the set
+        :return: The boundary of the set. The boundary of a set is the
+            intersection of all closed sets containing the subset.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def complement(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def complement(self, subset: Container[T]) -> Container[T]:
         """
 
         :param subset: The subset of the topology for which the complement
@@ -98,17 +111,17 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: 'Topology[T]') -> 'Topology[T]':
+    def __mul__(self, other: 'Topology[Y]') -> 'ProductTopology[T, Y]':
         """
 
         :param other: The other topology against which this one is to be
             multiplied
-        :return: The product topology
+        :return: The product topology formed by multiplying the topologies
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __eq__(self, other: 'Topology') -> bool:
+    def __eq__(self, other: 'Topology[T]') -> bool:
         """
         Axiomatic set theory states that two sets are equal iff their elements
         are equal. Using this axiom, let two topologies be equal iff their

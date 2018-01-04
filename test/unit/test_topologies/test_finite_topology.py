@@ -6,11 +6,13 @@ from hypothesis import given, assume
 from hypothesis.strategies import lists
 from test.unit.generators import topologies, topological_subsets
 from test.unit.generators import TopologicalSubset
-from src.interfaces import Topology
+from src.interfaces import FiniteTopology, Topology
+from src.topologies import CustomTopology
 from functools import reduce
 from typing import List, TypeVar
 import operator
 from src.topologies import EmptyTopology
+from itertools import product
 
 T = TypeVar('T')
 
@@ -26,7 +28,9 @@ class TestGetOpenNeighborhoods(TestFiniteTopology):
     Contains unit tests for the method that gets the first elements
     """
     @given(topologies())
-    def test_get_open_neighborhood_of_point(self, topology: Topology) -> None:
+    def test_get_open_neighborhood_of_point(
+            self, topology: FiniteTopology
+    ) -> None:
         """
 
         :param topology: The topology for which open neighborhoods are to be
@@ -39,7 +43,7 @@ class TestGetOpenNeighborhoods(TestFiniteTopology):
         self.assertGreater(len(open_neighborhoods), 0)
 
     @given(topologies())
-    def test_closed_sets(self, topology: Topology) -> None:
+    def test_closed_sets(self, topology: FiniteTopology[int]) -> None:
         """
         Test that the complement of the closed sets of the topology are open
         sets
@@ -57,7 +61,7 @@ class TestComplement(TestFiniteTopology):
     Contains unit tests for the complement function
     """
     @given(topologies())
-    def test_complement(self, topology: Topology[int]) -> None:
+    def test_complement(self, topology: FiniteTopology[int]) -> None:
         """
         The complement of the complement of a set should be the same set
 
@@ -114,20 +118,20 @@ class TestProduct(TestFiniteTopology):
     Tests that multiplying two finite topologies together produces a product
     topology
     """
-    @given(lists(topologies()))
-    def test_multiplication(self, topology_list: List[Topology]):
+    @given(topologies(), topologies())
+    def test_multiplication_two_topologies(
+            self, first: FiniteTopology[int], second: FiniteTopology[int]
+    ) -> None:
         """
-        Tests that multiplying random topologies yields a topology with
-        elements being the union of all elements in each topology.
+        Take two topologies and multiply them together. Check that the elements
+        of the product topology are the products of the two separate
+        topologies.
 
-        :param topology_list: A list of randomly-generated topologies to
-            multiply
+        :param first: The first topology to multiply
+        :param second: The second topology to multiply
         """
-        product = reduce(operator.mul, topology_list, EmptyTopology())
-        self.assertIsInstance(product, Topology)
-        elements = reduce(
-            lambda x, y: x.union(y),
-            map(lambda x: x.elements, topology_list),
-            set()
+        product_topology = first * second
+        self.assertEqual(
+            set(product(first.elements, second.elements)),
+            product_topology.elements
         )
-        self.assertEqual(elements, product.elements)
