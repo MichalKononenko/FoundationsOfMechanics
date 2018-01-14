@@ -4,7 +4,7 @@ a finite number of open sets
 """
 import abc
 from .topology import Topology, T
-from typing import Union, Set, Generic
+from typing import Union, Set, Generic, Container, Collection
 
 
 class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
@@ -15,7 +15,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
     """
     @property
     @abc.abstractmethod
-    def elements(self) -> Set[T]:
+    def elements(self) -> Collection[T]:
         """
 
         :return: The elements in the topology
@@ -24,7 +24,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def open_sets(self) -> Set[Set[T]]:
+    def open_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The open sets in the topology
@@ -33,7 +33,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def closed_sets(self) -> Set[Set[T]]:
+    def closed_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The closed sets for the topology. A closed set is a set whose

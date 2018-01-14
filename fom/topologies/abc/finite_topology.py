@@ -2,7 +2,7 @@
 Base class for topologies with a finite number of elements
 """
 import abc
-from typing import Set, TypeVar, Union, Generic
+from typing import Set, TypeVar, Union, Generic, Collection
 from fom.topologies.finite_product_topology import FiniteProductTopology
 from fom.interfaces import Topology
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
@@ -22,7 +22,7 @@ class FiniteTopology(
     the open sets of the topology can be iterated through
     """
     @property
-    def closed_sets(self) -> Set[Set[T]]:
+    def closed_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The closed sets in the topology
