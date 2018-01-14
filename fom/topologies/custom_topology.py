@@ -2,7 +2,7 @@
 Defines a topology where sets and open sets are given by the user on
 construction
 """
-from .finite_topology import FiniteTopology
+from fom.topologies.abc.finite_topology import FiniteTopology
 from typing import Set, TypeVar, Union, FrozenSet
 from fom.exceptions import InvalidOpenSets
 

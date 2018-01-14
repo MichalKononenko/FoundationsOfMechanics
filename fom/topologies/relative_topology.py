@@ -4,7 +4,7 @@ in a topology and a subset, and then intersecting the open sets with the
 subsets
 """
 from fom.interfaces import Topology
-from fom.topologies.finite_topology import FiniteTopology
+from fom.topologies.abc.finite_topology import FiniteTopology
 from typing import Set, TypeVar, Union, FrozenSet
 from fom.exceptions import InvalidSubset
 

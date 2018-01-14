@@ -3,7 +3,7 @@ Base class for topologies with a finite number of elements
 """
 import abc
 from typing import Set, TypeVar, Union, Generic
-from .finite_product_topology import FiniteProductTopology
+from fom.topologies.finite_product_topology import FiniteProductTopology
 from fom.interfaces import Topology
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
 from fom.exceptions import InvalidSubset
