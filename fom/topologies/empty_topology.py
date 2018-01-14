@@ -1,4 +1,4 @@
-from src.interfaces import Topology
+from fom.interfaces import Topology
 from typing import Set, TypeVar, Union, FrozenSet, Tuple, Optional
 
 T = TypeVar('T')

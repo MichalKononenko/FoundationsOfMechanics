@@ -2,8 +2,8 @@
 Implements open and closed intervals
 """
 import abc
-from src.interfaces import BoundedInterval
-from src.exceptions import InvalidIntervals
+from fom.interfaces import BoundedInterval
+from fom.exceptions import InvalidIntervals
 from typing import Generic, TypeVar
 
 T = TypeVar('T')

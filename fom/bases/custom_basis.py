@@ -2,9 +2,9 @@
 Defines a basis where the open sets of the basis are provided by the user
 on construction
 """
-from src.interfaces import Basis as BasisInterface
-from src.interfaces import Topology
-from src.exceptions import InvalidOpenSets
+from fom.interfaces import Basis as BasisInterface
+from fom.interfaces import Topology
+from fom.exceptions import InvalidOpenSets
 from typing import Set, TypeVar, FrozenSet, Union, Iterator
 
 T = TypeVar('T')

@@ -6,12 +6,12 @@ from hypothesis import given, assume
 from hypothesis.strategies import lists
 from test.unit.generators import topologies, topological_subsets
 from test.unit.generators import TopologicalSubset
-from src.interfaces import FiniteTopology, Topology
-from src.topologies import CustomTopology
+from fom.interfaces import FiniteTopology, Topology
+from fom.topologies import CustomTopology
 from functools import reduce
 from typing import List, TypeVar
 import operator
-from src.topologies import EmptyTopology
+from fom.topologies import EmptyTopology
 from itertools import product
 
 T = TypeVar('T')

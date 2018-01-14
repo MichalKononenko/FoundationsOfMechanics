@@ -1,9 +1,9 @@
 """
 Implements product topologies
 """
-from src.interfaces import FiniteProductTopology as FPTInterface
-from src.interfaces import FiniteTopology
-from src.exceptions import InvalidSubset
+from fom.interfaces import FiniteProductTopology as FPTInterface
+from fom.interfaces import FiniteTopology
+from fom.exceptions import InvalidSubset
 from itertools import product
 from typing import Generic, TypeVar, Set, Tuple, Union
 from functools import reduce

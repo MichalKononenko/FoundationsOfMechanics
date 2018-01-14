@@ -4,9 +4,9 @@ Base class for topologies with a finite number of elements
 import abc
 from typing import Set, TypeVar, Union, Generic
 from .finite_product_topology import FiniteProductTopology
-from src.interfaces import Topology
-from src.interfaces import FiniteTopology as FiniteTopologyInterface
-from src.exceptions import InvalidSubset
+from fom.interfaces import Topology
+from fom.interfaces import FiniteTopology as FiniteTopologyInterface
+from fom.exceptions import InvalidSubset
 from functools import reduce
 import operator
 

@@ -4,7 +4,7 @@ construction
 """
 from .finite_topology import FiniteTopology
 from typing import Set, TypeVar, Union, FrozenSet
-from src.exceptions import InvalidOpenSets
+from fom.exceptions import InvalidOpenSets
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]
