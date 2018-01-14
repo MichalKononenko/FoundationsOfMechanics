@@ -14,7 +14,7 @@ class CustomTopology(FiniteTopology):
     Implements a topology where open sets and elements are given by the user
     """
     def __init__(
-            self, elements: Collection[T], open_sets: Collection[Collection[T]]
+            self, elements: Set[T], open_sets: Set[Set[T]]
     ) -> None:
         """
 
@@ -29,7 +29,7 @@ class CustomTopology(FiniteTopology):
         self._assert_third_axiom(open_sets)
 
     @property
-    def elements(self) -> Collection[T]:
+    def elements(self) -> Set[T]:
         """
 
         :return: The elements of the topology
@@ -37,7 +37,7 @@ class CustomTopology(FiniteTopology):
         return self._elements
 
     @property
-    def open_sets(self) -> Collection[Collection[T]]:
+    def open_sets(self) -> Set[Set[T]]:
         """
 
         :return: The open sets in the topology
@@ -46,8 +46,8 @@ class CustomTopology(FiniteTopology):
 
     @staticmethod
     def _assert_first_axiom(
-            elements: Collection[T],
-            open_sets: Collection[Collection[T]]
+            elements: Set[T],
+            open_sets: Set[Set[T]]
     ) -> None:
         if (set() not in open_sets) or (frozenset() not in open_sets):
             raise InvalidOpenSets(
@@ -59,7 +59,7 @@ class CustomTopology(FiniteTopology):
             )
 
     @staticmethod
-    def _assert_second_axiom(open_sets: Collection[Collection[T]]) -> None:
+    def _assert_second_axiom(open_sets: Set[Set[T]]) -> None:
         for first_set in open_sets:
             for second_set in open_sets:
                 if first_set.intersection(second_set) not in open_sets:
@@ -71,7 +71,7 @@ class CustomTopology(FiniteTopology):
                     )
 
     @staticmethod
-    def _assert_third_axiom(open_sets: Collection[Collection[T]]) -> None:
+    def _assert_third_axiom(open_sets: Set[Set[T]]) -> None:
         for first_set in open_sets:
             for second_set in open_sets:
                 if first_set.union(second_set) not in open_sets:
