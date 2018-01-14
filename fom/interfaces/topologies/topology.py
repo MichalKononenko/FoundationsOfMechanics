@@ -2,7 +2,7 @@
 Provides the most general definition of topological space
 """
 import abc
-from typing import Generic, TypeVar, Union, Container
+from typing import Generic, TypeVar, Union, Container, Tuple
 
 T = TypeVar('T')
 Y = TypeVar('Y')
@@ -111,7 +111,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: 'Topology[Y]') -> 'ProductTopology[T, Y]':
+    def __mul__(self, other: 'Topology[Y]') -> 'Topology[Tuple[T, Y]]':
         """
 
         :param other: The other topology against which this one is to be
@@ -121,7 +121,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __eq__(self, other: 'Topology[T]') -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Axiomatic set theory states that two sets are equal iff their elements
         are equal. Using this axiom, let two topologies be equal iff their
