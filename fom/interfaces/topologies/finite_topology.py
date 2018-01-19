@@ -3,8 +3,8 @@ Describes a topology that contains a finite number of elements, and therefore
 a finite number of open sets
 """
 import abc
-from .topology import Topology, T
-from typing import Union, Generic, Container, Collection
+from .topology import Topology, T, Y
+from typing import Union, Generic, Container, Collection, Tuple, overload
 
 
 class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
@@ -41,6 +41,20 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
             complement is an open set
         """
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: T
+    ) -> Collection[Collection[T]]:
+        pass
+
+    @abc.abstractmethod
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: Container[T]
+    ) -> Collection[Collection[T]]:
+        pass
 
     @abc.abstractmethod
     def get_open_neighborhoods(
@@ -100,7 +114,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: Topology[T]) -> Topology[T]:
+    def __mul__(self, other: Topology[Y]) -> Topology[Tuple[T, Y]]:
         """
 
         :param other: The other topology against which this one is to be

@@ -4,17 +4,28 @@ construction
 """
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
 from fom.interfaces import Topology as TopologyInterface
-from typing import TypeVar, Union, Collection, Generic, Iterator
-from typing import Container, Iterable
+from typing import TypeVar, Union, Collection, Generic, Iterator, Tuple
+from typing import Container, Iterable, overload, cast
 from fom.exceptions import InvalidOpenSets
 
 T = TypeVar('T')
+Y = TypeVar('Y')
 
 
 class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
     """
     Implements a finite topology where open sets and elements are given by the
-    user
+    user. As a result, the elements in this topology are finite and countable.
+    The open sets in the topology are finite and countable as well.
+
+    .. note::
+
+        At the time of writing, the ``__contains__`` method in a generic
+        container has type of ``object``. This is due to the
+        mypy community deciding how to support covariance in sequences.
+        An example of a covariant list is ``[1, "foo"]``, since the first
+        element is an ``int`` and the second is a ``str``.
+
     """
     def __init__(
             self, elements: Collection[T], open_sets: Collection[Collection[T]]
@@ -53,6 +64,18 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         """
         return self._ClosedSets(self)
 
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: T
+    ) -> Collection[Collection[T]]:
+        pass
+
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: Container[T]
+    ) -> Collection[Collection[T]]:
+        pass
+
     def get_open_neighborhoods(
             self, point_or_set: Union[T, Container[T]]
     ) -> Collection[Collection[T]]:
@@ -63,17 +86,20 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         :return: The open neighborhoods
         """
         if self._is_point(point_or_set):
-            neighborhoods = self._OpenNeighborhoodsForPoint(self, point_or_set)
+            return self._OpenNeighborhoodsForPoint(
+                self, cast(T, point_or_set)
+            )
         else:
-            neighborhoods = self._OpenNeighborhoodsForSet(self, point_or_set)
-
-        return neighborhoods
+            return self._OpenNeighborhoodsForSet(
+                self, cast(Container[T], point_or_set)
+            )
 
     def closure(self, subset: Container[T]) -> Collection[T]:
         """
 
-        :param subset: The set for which the closure is to be obtained
-        :return: The closure
+        :param subset: A container containing a subset of the elements in the
+            topology for which the closure needs to be found
+        :return: The closure of the subset
         """
         closed_sets_containing_subset = filter(
             lambda set_: self._open_set_contains_container(set_, subset),
@@ -102,7 +128,7 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         :return:
         """
         return self._Intersection(
-            self, [self.closure(subset), self.complement(self.closure(subset))]
+            self, (self.closure(subset), self.complement(self.closure(subset)))
         )
 
     def complement(self, subset: Container[T]) -> Collection[T]:
@@ -152,19 +178,18 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
                 'The set of open sets not contain the set of elements'
             )
 
-
-    def __mul__(self, other: TopologyInterface[T]) -> TopologyInterface[T]:
+    def __mul__(self, other: TopologyInterface[Y]) -> TopologyInterface[Tuple[T, Y]]:
         return self
 
     def __eq__(self, other: object) -> bool:
-        if not (hasattr(other, 'elements') and hasattr(other, 'open_sets')):
-            is_equal = False
+        if not isinstance(other, FiniteTopologyInterface):
+            raise ValueError('Incomparable types')
         else:
-            is_equal = (other.elements == self.elements) and (other.open_sets == self.open_sets)
+            elements_equal = self.elements == other.elements
+            open_sets_equal = self.open_sets == other.elements
+            return elements_equal and open_sets_equal
 
-        return is_equal
-
-    class _ClosedSets(Collection[Collection[T]], Generic[T]):
+    class _ClosedSets(Collection[Collection[T]]):
         """
         Base class for the collection of closed sets
         """
@@ -195,21 +220,23 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
                 for open_set in self._topology.open_sets
             )
 
-        def __contains__(self, item: Collection[T]) -> bool:
+        def __contains__(self, item: object) -> bool:
             """
 
             :param item: The item to check for membership in the topology
             :return: ``True`` if the set is a closed set in the topology,
                 otherwise ``False``
             """
-            return self._topology.complement(item) in self._topology.open_sets
+            return self._topology.complement(
+                cast(Collection[T], item)
+            ) in self._topology.open_sets
 
         def __repr__(self) -> str:
             return '%s(topology=%s)' % (
                 self.__class__.__name__, self._topology
             )
 
-    class _OpenNeighborhoodsForPoint(Collection[Collection[T]], Generic[T]):
+    class _OpenNeighborhoodsForPoint(Collection[Collection[T]]):
         """
         The collection of open neighborhoods
         """
@@ -234,7 +261,7 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
             """
             return len(frozenset(self))
 
-        def __contains__(self, item: Collection[T]) -> bool:
+        def __contains__(self, item: object) -> bool:
             """
 
             :param item: The open set to see if it is a neighborhood
@@ -242,7 +269,7 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
             """
             return item in frozenset(self)
 
-    class _OpenNeighborhoodsForSet(Collection[Collection[T]], Generic[T]):
+    class _OpenNeighborhoodsForSet(Collection[Collection[T]]):
         def __init__(
                 self,
                 topology: FiniteTopologyInterface[T],
@@ -264,7 +291,7 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         def __len__(self) -> int:
             return len(frozenset(self))
 
-        def __contains__(self, item: Collection[T]) -> bool:
+        def __contains__(self, item: object) -> bool:
             return item in frozenset(self)
 
         def _open_set_contains_container(
@@ -281,7 +308,7 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
 
             return all_elements_in_container and not closed_set_has_container
 
-    class _Intersection(Collection[T], Generic[T]):
+    class _Intersection(Collection[T]):
         """
         Base class for intersection of a set of sets
         """
@@ -302,10 +329,10 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         def __len__(self) -> int:
             return len(frozenset(self))
 
-        def __contains__(self, item: T) -> bool:
+        def __contains__(self, item: object) -> bool:
             return item in frozenset(self)
 
-    class _Union(Collection[T], Generic[T]):
+    class _Union(Collection[T]):
         """
         Base class for the union of a set of sets
         """
@@ -326,10 +353,10 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         def __len__(self) -> int:
             return len(frozenset(self))
 
-        def __contains__(self, item: T) -> bool:
+        def __contains__(self, item: object) -> bool:
             return item in frozenset(self)
 
-    class _Complement(Collection[T], Generic[T]):
+    class _Complement(Collection[T]):
         """
 
         """
@@ -350,5 +377,5 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         def __len__(self) -> int:
             return len(frozenset(self))
 
-        def __contains__(self, item: T) -> bool:
+        def __contains__(self, item: object) -> bool:
             return item in frozenset(self)
