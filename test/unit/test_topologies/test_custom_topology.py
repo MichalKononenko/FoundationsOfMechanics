@@ -46,14 +46,26 @@ class TestCustomTopologyConstructor(TestCustomTopology):
     """
     Tests that the constructor allows a valid topology
     """
+    def setUp(self) -> None:
+        self.open_sets_without_empty_set = {
+            frozenset({self.x1}), frozenset({self.x1, self.x2})
+        }
+        self.open_sets_without_elements = {
+            frozenset({}), frozenset({self.x1})
+        }
+
     def test_valid_topology(self):
         topol = CustomTopology(self.elements, self.open_sets)
         self.assertEqual(self.elements, topol.elements)
         self.assertEqual(self.open_sets, topol.open_sets)
 
-    def test_invalid_topology(self):
+    def test_invalid_topology_no_empty_set(self):
         with self.assertRaises(ValueError):
-            CustomTopology(self.elements, self.invalid_open_sets)
+            CustomTopology(self.elements, self.open_sets_without_empty_set)
+
+    def test_invalid_topology_no_element_set(self):
+        with self.assertRaises(ValueError):
+            CustomTopology(self.elements, self.open_sets_without_elements)
 
 
 class TestCustomTopologyGenerator(TestCustomTopology):

@@ -22,14 +22,14 @@ class FiniteTopology(
     the open sets of the topology can be iterated through
     """
     @property
-    def closed_sets(self) -> Set[Set[T]]:
+    def closed_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The closed sets in the topology
         """
         closed_sets = frozenset(
             self.complement(open_set) for open_set in self.open_sets
-        )  # type: Set[Set[T]]
+        )
         return closed_sets
 
     def get_open_neighborhoods(

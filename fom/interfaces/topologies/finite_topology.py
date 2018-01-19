@@ -100,7 +100,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: 'Topology[T]') -> 'Topology[T]':
+    def __mul__(self, other: Topology[T]) -> Topology[T]:
         """
 
         :param other: The other topology against which this one is to be
