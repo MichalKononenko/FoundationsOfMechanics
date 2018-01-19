@@ -2,7 +2,7 @@
 Base class for topologies with a finite number of elements
 """
 import abc
-from typing import Set, TypeVar, Union, Generic, Collection
+from typing import Set, TypeVar, Union, Generic, Collection, Container
 from fom.topologies.finite_product_topology import FiniteProductTopology
 from fom.interfaces import Topology
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
@@ -22,7 +22,7 @@ class FiniteTopology(
     the open sets of the topology can be iterated through
     """
     @property
-    def closed_sets(self) -> Collection[Collection[T]]:
+    def closed_sets(self) -> Set[Set[T]]:
         """
 
         :return: The closed sets in the topology
@@ -48,14 +48,15 @@ class FiniteTopology(
 
         return open_sets
 
-    def complement(self, subset: Set[T]) -> Set[T]:
+    def complement(self, subset: Container[T]) -> Set[T]:
         """
 
         :param subset: The subset for which the complement is to be retrieved
         :return: The complement
         """
-        self._assert_subset(subset)
-        return self.elements.difference(subset)
+        return frozenset(
+            (element for element in self.elements if element not in subset)
+        )
 
     def closure(self, subset: Set[T]) -> Set[T]:
         """
