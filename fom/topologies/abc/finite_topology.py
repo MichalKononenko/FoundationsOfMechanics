@@ -3,15 +3,19 @@ Base class for topologies with a finite number of elements
 """
 import abc
 from typing import Set, TypeVar, Union, Generic, Collection, Container
+from typing import Iterator, Tuple, cast
 from fom.topologies.finite_product_topology import FiniteProductTopology
+from fom.topologies.abc.topology import Topology as AbstractTopology
 from fom.interfaces import Topology
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
 from fom.exceptions import InvalidSubset
 from functools import reduce
 import operator
+import itertools
 
 T = TypeVar('T')
-X = TypeVar('Y')
+X = TypeVar('X')
+Y = TypeVar('Y')
 
 
 class FiniteTopology(
@@ -27,10 +31,7 @@ class FiniteTopology(
 
         :return: The closed sets in the topology
         """
-        closed_sets = frozenset(
-            self.complement(open_set) for open_set in self.open_sets
-        )
-        return closed_sets
+        return self._ClosedSets(self)
 
     def get_open_neighborhoods(
             self, point_or_set: Union[T, Set[T]]
@@ -157,3 +158,92 @@ class FiniteTopology(
 
     def __eq__(self, other: Topology[T]) -> bool:
         return self.open_sets == other.open_sets
+
+    class Intersection(Collection[T], AbstractTopology.Intersection):
+        """
+        Refine intersections to include iteration and containment as well
+        """
+        def __init__(
+                self,
+                first_collection: Collection[T],
+                second_collection: Collection[T]
+        ) -> None:
+            super(FiniteTopology.Intersection, self).__init__(
+                first_collection, second_collection
+            )
+            self._combined_elements = frozenset(
+                filter(
+                    lambda x: x in first_collection and x in second_collection,
+                    itertools.chain(first_collection, second_collection)
+                )
+            )
+
+        def __iter__(self) -> Iterator[T]:
+            """
+
+            :return: An iterator iterating through the elements in the
+                intersection
+            """
+            return iter(self._combined_elements)
+
+        def __len__(self) -> int:
+            return len(self._combined_elements)
+
+    class Union(Collection[T], AbstractTopology.Union):
+        def __init__(
+                self,
+                first_collection: Collection[T],
+                second_collection: Collection[T]
+        ) -> None:
+            super(FiniteTopology.Union, self).__init__(
+                first_collection, second_collection
+            )
+            self._combined_elements = frozenset(
+                itertools.chain(first_collection, second_collection)
+            )
+
+        def __iter__(self) -> Iterator[T]:
+            return iter(self._combined_elements)
+
+        def __len__(self) -> int:
+            return len(self._combined_elements)
+
+    class Product(Collection[Tuple[T, Y]], AbstractTopology.Product):
+        def __init__(
+                self,
+                first_collection: Collection[T],
+                second_collection: Collection[Y]
+        ) -> None:
+            super(FiniteTopology.Product, self).__init__(
+                first_collection, second_collection
+            )
+            self._combined_elements = frozenset(
+                itertools.product(first_collection, second_collection)
+            )
+
+        def __iter__(self) -> Iterator[Tuple[X, Y]]:
+            return iter(self._combined_elements)
+
+        def __len__(self) -> int:
+            return len(self._combined_elements)
+
+    class _ClosedSets(Collection[T]):
+        """
+        Returns the closed sets
+        """
+        def __init__(self, topology: FiniteTopologyInterface[T]):
+            self._topology = topology
+
+        def __iter__(self) -> Iterator[Collection[T]]:
+            return (
+                self._topology.complement(open_set)
+                for open_set in self._topology.open_sets
+            )
+
+        def __len__(self) -> int:
+            return len(self._topology.open_sets)
+
+        def __contains__(self, item: object) -> bool:
+            cast_item = cast(Collection[T], item)
+            return self._topology.complement(cast_item) \
+                   in self._topology.open_sets
