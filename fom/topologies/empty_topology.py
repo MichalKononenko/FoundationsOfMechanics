@@ -1,51 +1,90 @@
+"""
+Describes an empty topology. This is a topology that has no element, and whose
+only open set is an empty set.
+"""
 from fom.interfaces import Topology
-from typing import Set, TypeVar, Union, FrozenSet, Tuple, Optional
+from fom.identity_objects import EmptyContainer, EmptyContainerCollection
+from typing import TypeVar, Union, Generic, Container, Tuple, overload
 
 T = TypeVar('T')
-ANY_SET = Union[Set[T], FrozenSet[T], set]
+Y = TypeVar('Y')
 
 
-class EmptyTopology(Topology):
+class EmptyTopology(Topology[T], Generic[T]):
+    """
+    Describes a topology which has no elements, and whose only open set is
+    the empty set. In the language of Python containers, this is a topology
+    whose element is a container that contains no elements.
+    """
     @property
-    def elements(self):
-        return set()
+    def elements(self) -> Container[T]:
+        return EmptyContainer()
 
     @property
-    def open_sets(self):
-        return frozenset(frozenset())
+    def open_sets(self) -> Container[Container[T]]:
+        return EmptyContainerCollection()
 
     @property
     def closed_sets(self):
-        return frozenset(frozenset())
+        return EmptyContainerCollection()
 
-    @property
-    def _empty_set(self) -> ANY_SET[T]:
-        return frozenset()
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: T
+    ) -> Container[Container[T]]:
+        """
+
+        :param point_or_set:
+        :return:
+        """
+        pass
+
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: Container[T]
+    ) -> Container[Container[T]]:
+        """
+
+        :param point_or_set:
+        :return:
+        """
+        pass
 
     def get_open_neighborhoods(
-            self, point_or_set: Union[T, ANY_SET]
-    ):
-        return set()
+            self, point_or_set: Union[T, Container[T]]
+    ) -> Container[Container[T]]:
+        return EmptyContainerCollection()
 
-    def closure(self, subset: ANY_SET[T]) -> ANY_SET[T]:
+    def closure(self, subset: Container[T]) -> Container[T]:
         """
 
         :param subset: The subset for which the closure is to be determined
+        :return: The closure. On the empty topology. This is always the empty
+            set
+        """
+        return EmptyContainer()
+
+    def boundary(self, subset: Container[T]) -> Container[T]:
+        """
+
+        :param subset: The subset for which the boundary is to be determined
+        :return: The empty set
+        """
+        return EmptyContainer()
+
+    def complement(self, subset: Container[T]) -> Container[T]:
+        """
+
+        :param subset: The subset for which the complement is to be obtained
         :return:
         """
-        return self._empty_set
+        return EmptyContainer()
 
-    def boundary(self, subset: ANY_SET[T]) -> ANY_SET[T]:
-        return self._empty_set
+    def interior(self, subset: Container[T]) -> Container[T]:
+        return EmptyContainer()
 
-    def complement(self, subset: ANY_SET[T]) -> ANY_SET[T]:
-        return self._empty_set
-
-    def interior(self, subset: ANY_SET[T]) -> ANY_SET[T]:
-        return self._empty_set
-
-    def __mul__(self, other: Topology) -> Topology:
+    def __mul__(self, other: Topology[Y]) -> Topology[Tuple[T, Y]]:
         return other
 
-    def __eq__(self, other: Topology) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__)
