@@ -3,7 +3,7 @@ Base class for topologies with a finite number of elements
 """
 import abc
 from typing import Set, TypeVar, Union, Generic, Collection, Container
-from typing import Iterator, Tuple, cast
+from typing import Iterator, Tuple, cast, Iterable
 from fom.topologies.finite_product_topology import FiniteProductTopology
 from fom.topologies.abc.topology import Topology as AbstractTopology
 from fom.interfaces import Topology
@@ -16,20 +16,43 @@ import itertools
 T = TypeVar('T')
 X = TypeVar('X')
 Y = TypeVar('Y')
+E = TypeVar('E')
 
 
 class FiniteTopology(
     FiniteTopologyInterface[T], Generic[T], metaclass=abc.ABCMeta
 ):
     """
-    Base class for topologies with a finite number of elements. This means that
-    the open sets of the topology can be iterated through
+    Base class for topologies with a finite number of elements.
+    Since these topologies have finite elements, then they must also have a
+    finite number of open sets, since the most open sets that a topology can
+    have is equal to the power set of the elements. Elements and open sets
+    can be iterated through in a finite topology
     """
+    @property
+    @abc.abstractmethod
+    def elements(self) -> Collection[T]:
+        """
+
+        :return: The set of elements in the topology
+        """
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def open_sets(self) -> Collection[Collection[T]]:
+        """
+
+        :return: The open sets in the topology
+        """
+        raise NotImplementedError()
+
     @property
     def closed_sets(self) -> Collection[Collection[T]]:
         """
 
-        :return: The closed sets in the topology
+        :return: The closed sets in the topology. A set is a closed set iff its
+            complement is an open set.
         """
         return self._ClosedSets(self)
 
@@ -49,28 +72,28 @@ class FiniteTopology(
 
         return open_sets
 
-    def complement(self, subset: Container[T]) -> Set[T]:
+    def complement(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the complement is to be retrieved
         :return: The complement
         """
-        return frozenset(
-            (element for element in self.elements if element not in subset)
-        )
+        return self._Complement(self, subset)
 
-    def closure(self, subset: Set[T]) -> Set[T]:
+    def closure(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the closure is to be calculated
         :return: The closure
         """
-        self._assert_subset(subset)
-        s = frozenset(subset)
+        closed_sets_containing_subset = (
+            closed_set for closed_set in self.closed_sets
+            if self._collection_contains_container(closed_set, subset)
+        )
         return reduce(
-            operator.and_,
-            filter(s.issubset, self.closed_sets),
-            set()
+            lambda x, y: self.Intersection(x, y),
+            closed_sets_containing_subset,
+            self.elements
         )
 
     def interior(self, subset: Set[T]) -> Set[T]:
@@ -86,14 +109,15 @@ class FiniteTopology(
             set()
         )
 
-    def boundary(self, subset: Set[T]) -> Set[T]:
+    def boundary(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the boundary is to be calculated
         :return: The boundary
         """
-        self._assert_subset(subset)
-        return self.closure(subset) and self.closure(self.complement(subset))
+        return self.Intersection(
+            self.closure(subset), self.closure(self.complement(subset))
+        )
 
     @property
     def _is_empty_topology(self) -> bool:
@@ -142,6 +166,24 @@ class FiniteTopology(
                 'The set %s is not a subset of %s' % subset, self.elements
             )
 
+    def _collection_contains_container(
+            self, collection: Collection[T], container: Container[T]
+    ) -> bool:
+        """
+        Checks that a collection contains a container. Define a collection as
+        containing a container if and only if no elements in the topology that
+        are not in the collection are in the container
+
+        :param collection:
+        :param container:
+        :return:
+        """
+        elements_outside_container = {
+            element for element in self.elements
+            if element in collection and element not in container
+        }
+        return len(elements_outside_container) == 0
+
     def __repr__(self) -> str:
         """
 
@@ -159,7 +201,38 @@ class FiniteTopology(
     def __eq__(self, other: Topology[T]) -> bool:
         return self.open_sets == other.open_sets
 
-    class Intersection(Collection[T], AbstractTopology.Intersection):
+    class _FiniteCollection(
+            Collection[E], Generic[E], metaclass=abc.ABCMeta
+    ):
+        """
+        Abstract class representing a finite collection of elements that can
+        be equated to other elements
+        """
+        def __eq__(self, other: object) -> bool:
+            """
+            Equality test. As per the axiom of set theory, a set is equal to
+            another set if and only if all elements in the set are equal to
+            each other. The first part of the equality test checks if the other
+            object is iterable. The second part iterates through it and checks
+            if all elements are equal.
+
+            The equality test runs in linear time.
+
+            :param other: The object to check for equality
+            :return: ``True`` if the objects are equal to each other
+            """
+            are_equal = False
+
+            if hasattr(other, '__iter__'):
+                cast_other = cast(Iterable[T], other)
+                are_equal = set(self) == set(cast_other)
+
+            return are_equal
+
+        def __hash__(self) -> int:
+            return hash(iter(self))
+
+    class Intersection(_FiniteCollection[T], AbstractTopology.Intersection):
         """
         Refine intersections to include iteration and containment as well
         """
@@ -189,7 +262,7 @@ class FiniteTopology(
         def __len__(self) -> int:
             return len(self._combined_elements)
 
-    class Union(Collection[T], AbstractTopology.Union):
+    class Union(_FiniteCollection[T], AbstractTopology.Union):
         def __init__(
                 self,
                 first_collection: Collection[T],
@@ -208,7 +281,7 @@ class FiniteTopology(
         def __len__(self) -> int:
             return len(self._combined_elements)
 
-    class Product(Collection[Tuple[T, Y]], AbstractTopology.Product):
+    class Product(_FiniteCollection[Tuple[T, Y]], AbstractTopology.Product):
         def __init__(
                 self,
                 first_collection: Collection[T],
@@ -227,23 +300,126 @@ class FiniteTopology(
         def __len__(self) -> int:
             return len(self._combined_elements)
 
-    class _ClosedSets(Collection[T]):
+    class _ClosedSets(_FiniteCollection[T]):
         """
-        Returns the closed sets
+        Represents the collection of closed sets in the topology
         """
-        def __init__(self, topology: FiniteTopologyInterface[T]):
+        def __init__(self, topology: FiniteTopologyInterface[T]) -> None:
+            """
+
+            :param topology: The topology for which the closed sets are to
+                be generated
+            """
             self._topology = topology
 
         def __iter__(self) -> Iterator[Collection[T]]:
+            """
+
+            :return: An iterator that iterates through the closed sets in
+                the topology, by taking the complement of each open set
+            """
             return (
                 self._topology.complement(open_set)
                 for open_set in self._topology.open_sets
             )
 
         def __len__(self) -> int:
+            """
+
+            :return: The number of closed sets in the topology. Since each open
+                set has a corresponding closed set, then the number of closed
+                sets is equal to the number of open sets.
+            """
             return len(self._topology.open_sets)
 
         def __contains__(self, item: object) -> bool:
-            cast_item = cast(Collection[T], item)
+            """
+
+            :param item: The item to test for membership. For a container, this
+                is only true if the complement of the elements in the container
+                corresponds to an open set.
+            :return: ``True`` if the set is a closed set, otherwise ``False``.
+
+            .. note::
+
+                While the type annotation says that any object can be passed
+                into this, the recommended type is ``Container[T]``, where
+                ``T`` is the underlying type of the topology.
+
+            """
+            cast_item = cast(Container[T], item)
             return self._topology.complement(cast_item) \
-                   in self._topology.open_sets
+                in self._topology.open_sets
+
+        def __repr__(self) -> str:
+            """
+
+            :return: A human-friendly representation of the closed sets object
+            """
+            return '{0}(topology={1})'.format(
+                self.__class__.__name__, self._topology
+            )
+
+    class _Complement(_FiniteCollection[T]):
+        """
+        Represents the complement of a given open set. A complement, as defined
+        in definition 1.1.1 in Abraham and Marsden, is the set of elements in
+        a topology that are not in a given set.
+        """
+        def __init__(
+                self,
+                topology: FiniteTopologyInterface[T],
+                base_set: Container[T]
+        ) -> None:
+            """
+
+            :param topology: The topological space in which the complement is
+                being taken
+            :param base_set: The set of elements for which the complement is
+                to be taken.
+            """
+            self._topology = topology
+            self._set = base_set
+
+        def __iter__(self) -> Iterator[T]:
+            """
+
+            :return: A generator that loops over all elements in the topology
+                and yields the elements that are not in the set given to this
+                object during construction.
+            """
+            for element in self._topology.elements:
+                if element not in self._set:
+                    yield element
+
+        def __len__(self) -> int:
+            """
+
+            :return: The number of elements in the complement
+            """
+            return len(frozenset(iter(self)))
+
+        def __contains__(self, item: object) -> bool:
+            """
+            Membership test for the complement
+
+            :param item: The item that is to be checked for membership. It is
+                recommended that this item has type ``T``, where ``T`` is the
+                type of element of the topology for which the complement was
+                taken
+            :return: ``True`` if the item is in the complement, otherwise
+                ``False``.
+            """
+            c_item = cast(T, item)
+            return \
+                c_item in self._topology.elements and c_item not in self._set
+
+        def __repr__(self) -> str:
+            """
+
+            :return: A human-friendly representation of the constructor
+                arguments of this object
+            """
+            return "{0}(topology={1}, base_set={2})".format(
+                self.__class__.__name__, self._topology, self._set
+            )

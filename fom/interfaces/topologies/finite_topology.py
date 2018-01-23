@@ -45,16 +45,33 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     @overload
     def get_open_neighborhoods(
-            self, point_or_set: T
+            self, point: T
     ) -> Collection[Collection[T]]:
-        pass
+        """
+        Return the open neighborhoods for a point, as per definition 1.1.1 of
+        Abraham and Marsden. The open neighborhoods for a point are the open
+        sets in the topology that contain the point
+
+        :param point: The point for which the open neighborhoods are to be
+            retrieved
+        :return: The open neighborhoods for the points
+        """
 
     @abc.abstractmethod
     @overload
     def get_open_neighborhoods(
-            self, point_or_set: Container[T]
+            self, set_: Container[T]
     ) -> Collection[Collection[T]]:
-        pass
+        r"""
+        Return the open neighborhoods for a set of points. The open
+        neighborhoods for a set are all the open sets that contain the elements
+        in the given set. For instance, an open neighborhood of the set
+        ``{2, 3}`` is ``{2, 3, 4}`` if ``{2, 3, 4}`` is an open set.
+
+        :param set_: The set for which the open neighborhoods are to be
+            obtained
+        :return: The open neighborhoods for the set
+        """
 
     @abc.abstractmethod
     def get_open_neighborhoods(

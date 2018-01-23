@@ -12,7 +12,7 @@ Y = TypeVar('Y')
 
 class Topology(Generic[T], metaclass=abc.ABCMeta):
     """
-    Base class for the topology
+    Base class for topologies, defining unions and intersections of containers.
     """
     @property
     @abc.abstractmethod
@@ -96,7 +96,8 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
 
     class Union(Container[T]):
         """
-        Defines a union between two containers
+        Defines a union between two containers. An item is in the union of two
+        containers if it is in either container
         """
         def __init__(
                 self,
@@ -117,7 +118,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         def __repr__(self) -> str:
             """
 
-            :return: The representation
+            :return: A user-friendly representation of the container
             """
             return '%s(first_container=%s, second_container=%s)' % (
                 self.__class__.__name__, self._first, self._second
