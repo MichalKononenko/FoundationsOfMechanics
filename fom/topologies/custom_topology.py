@@ -4,15 +4,16 @@ construction
 """
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
 from fom.interfaces import Topology as TopologyInterface
+from fom.topologies.abc import FiniteTopology
 from typing import TypeVar, Union, Collection, Generic, Iterator, Tuple
-from typing import Container, Iterable, overload, cast
+from typing import Container, Iterable, cast
 from fom.exceptions import InvalidOpenSets
 
 T = TypeVar('T')
 Y = TypeVar('Y')
 
 
-class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
+class CustomTopology(FiniteTopology[T], Generic[T]):
     """
     Implements a finite topology where open sets and elements are given by the
     user. As a result, the elements in this topology are finite and countable.
@@ -63,36 +64,6 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
         :return: The collection of closed sets in this topology
         """
         return self._ClosedSets(self)
-
-    @overload
-    def get_open_neighborhoods(
-            self, point_or_set: T
-    ) -> Collection[Collection[T]]:
-        pass
-
-    @overload
-    def get_open_neighborhoods(
-            self, point_or_set: Container[T]
-    ) -> Collection[Collection[T]]:
-        pass
-
-    def get_open_neighborhoods(
-            self, point_or_set: Union[T, Container[T]]
-    ) -> Collection[Collection[T]]:
-        """
-
-        :param point_or_set: The point or set for which the open neighborhoods
-            are to be obtained
-        :return: The open neighborhoods
-        """
-        if self._is_point(point_or_set):
-            return self._OpenNeighborhoodsForPoint(
-                self, cast(T, point_or_set)
-            )
-        else:
-            return self._OpenNeighborhoodsForSet(
-                self, cast(Container[T], point_or_set)
-            )
 
     def closure(self, subset: Container[T]) -> Collection[T]:
         """
@@ -235,78 +206,6 @@ class CustomTopology(FiniteTopologyInterface[T], Generic[T]):
             return '%s(topology=%s)' % (
                 self.__class__.__name__, self._topology
             )
-
-    class _OpenNeighborhoodsForPoint(Collection[Collection[T]]):
-        """
-        The collection of open neighborhoods
-        """
-        def __init__(
-                self,
-                topology: FiniteTopologyInterface[T],
-                point: T
-        ) -> None:
-            self._topology = topology
-            self._point = point
-
-        def __iter__(self) -> Iterator[Collection[T]]:
-            return (
-                open_set for open_set in self._topology.open_sets
-                if self._point in open_set
-            )
-
-        def __len__(self) -> int:
-            """
-
-            :return: The number of open neighborhoods
-            """
-            return len(frozenset(self))
-
-        def __contains__(self, item: object) -> bool:
-            """
-
-            :param item: The open set to see if it is a neighborhood
-            :return:
-            """
-            return item in frozenset(self)
-
-    class _OpenNeighborhoodsForSet(Collection[Collection[T]]):
-        def __init__(
-                self,
-                topology: FiniteTopologyInterface[T],
-                container: Container[T]
-        ) -> None:
-            self._topology = topology
-            self._container = container
-
-        def __iter__(self) -> Iterator[Collection[T]]:
-            """
-
-            :return: The open neighborhoods
-            """
-            return (
-                open_set for open_set in self._topology.open_sets if
-                self._open_set_contains_container(open_set, self._container)
-            )
-
-        def __len__(self) -> int:
-            return len(frozenset(self))
-
-        def __contains__(self, item: object) -> bool:
-            return item in frozenset(self)
-
-        def _open_set_contains_container(
-                self,
-                open_set: Collection[T],
-                container: Container[T]
-        ) -> bool:
-            closed_set_has_container = any(
-                element in container for element
-                in self._topology.complement(open_set))
-            all_elements_in_container = all(
-                element in container for element in open_set
-            )
-
-            return all_elements_in_container and not closed_set_has_container
 
     class _Intersection(Collection[T]):
         """

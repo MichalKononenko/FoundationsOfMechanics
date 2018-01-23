@@ -8,9 +8,8 @@ from fom.topologies.finite_product_topology import FiniteProductTopology
 from fom.topologies.abc.topology import Topology as AbstractTopology
 from fom.interfaces import Topology
 from fom.interfaces import FiniteTopology as FiniteTopologyInterface
-from fom.exceptions import InvalidSubset
+from fom.identity_objects import EmptyCollection
 from functools import reduce
-import operator
 import itertools
 
 T = TypeVar('T')
@@ -57,20 +56,22 @@ class FiniteTopology(
         return self._ClosedSets(self)
 
     def get_open_neighborhoods(
-            self, point_or_set: Union[T, Set[T]]
-    ) -> Set[Set[T]]:
+            self, point_or_set: Union[T, Container[T]]
+    ) -> Collection[Collection[T]]:
         """
 
-        :param point_or_set: The point or set for which open neighborhoods
-            are to be located
-        :return: The collection of elements
+        :param point_or_set: The point or set for which the open neighborhoods
+            are to be obtained
+        :return: The open neighborhoods
         """
         if self._is_point(point_or_set):
-            open_sets = self._get_open_neighborhoods_for_point(point_or_set)
+            return self._OpenNeighborhoodsForPoint(
+                self, cast(T, point_or_set)
+            )
         else:
-            open_sets = self._get_open_neighborhoods_for_set(point_or_set)
-
-        return open_sets
+            return self._OpenNeighborhoodsForSet(
+                self, cast(Container[T], point_or_set)
+            )
 
     def complement(self, subset: Container[T]) -> Collection[T]:
         """
@@ -96,17 +97,20 @@ class FiniteTopology(
             self.elements
         )
 
-    def interior(self, subset: Set[T]) -> Set[T]:
+    def interior(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the interior is to be calculated
         :return: The interior
         """
-        self._assert_subset(subset)
+        open_sets_containing_subset = (
+            open_set for open_set in self.open_sets
+            if self._collection_contains_container(open_set, subset)
+        )
         return reduce(
-            operator.or_,
-            filter(subset.issubset, self.open_sets),
-            set()
+            lambda x, y: self.Union(x, y),
+            open_sets_containing_subset,
+            EmptyCollection()
         )
 
     def boundary(self, subset: Container[T]) -> Collection[T]:
@@ -129,42 +133,6 @@ class FiniteTopology(
 
     def _is_point(self, point_or_set: Union[T, Set[T]]) -> bool:
         return isinstance(point_or_set, next(iter(self.elements)).__class__)
-
-    def _get_open_neighborhoods_for_point(self, point: T) -> Set[Set[T]]:
-        """
-
-        :param point: The point for which open neighborhoods are to be returned
-        :return: The open neighborhoods for this point
-        """
-        neighborhoods = frozenset(
-            open_set for open_set in self.open_sets if point in open_set
-        )  # type: Set[Set[T]]
-        return neighborhoods
-
-    def _get_open_neighborhoods_for_set(self, set_: Set[T]) -> Set[Set[T]]:
-        """
-
-        :param set_: The set for which open neighborhoods are to be returned
-        :return: The open neighborhoods for this set
-        """
-        neighborhoods = frozenset(
-            open_set for open_set in self.open_sets if open_set.issuperset(
-                set_)
-        )  # type: Set[Set[T]]
-        return neighborhoods
-
-    def _assert_subset(self, subset: Set[T]) -> None:
-        """
-
-        Checks that the set is a subset of the elements of the elements of the
-        topology. If it is not, raise a :class:`InvalidSubset` error
-
-        :param subset: The argument to check
-        """
-        if not self.elements.issuperset(subset):
-            raise InvalidSubset(
-                'The set %s is not a subset of %s' % subset, self.elements
-            )
 
     def _collection_contains_container(
             self, collection: Collection[T], container: Container[T]
@@ -194,15 +162,20 @@ class FiniteTopology(
         )
 
     def __mul__(
-            self, other: FiniteTopologyInterface[X]
-    ) -> FiniteProductTopology[T, X]:
+            self, other: Topology[Y]
+    ) -> Topology[Tuple[T, Y]]:
         return FiniteProductTopology(self, other)
 
-    def __eq__(self, other: Topology[T]) -> bool:
-        return self.open_sets == other.open_sets
+    def __eq__(self, other: object) -> bool:
+        is_equal = False
+
+        if isinstance(other, self.__class__):
+            is_equal = self.open_sets == other.open_sets
+
+        return is_equal
 
     class _FiniteCollection(
-            Collection[E], Generic[E], metaclass=abc.ABCMeta
+            Collection, Generic[E], metaclass=abc.ABCMeta
     ):
         """
         Abstract class representing a finite collection of elements that can
@@ -224,7 +197,7 @@ class FiniteTopology(
             are_equal = False
 
             if hasattr(other, '__iter__'):
-                cast_other = cast(Iterable[T], other)
+                cast_other = cast(Iterable[E], other)
                 are_equal = set(self) == set(cast_other)
 
             return are_equal
@@ -290,15 +263,14 @@ class FiniteTopology(
             super(FiniteTopology.Product, self).__init__(
                 first_collection, second_collection
             )
-            self._combined_elements = frozenset(
-                itertools.product(first_collection, second_collection)
-            )
+            self._first = first_collection
+            self._second = second_collection
 
-        def __iter__(self) -> Iterator[Tuple[X, Y]]:
-            return iter(self._combined_elements)
+        def __iter__(self) -> Iterator[Tuple[T, Y]]:
+            return itertools.product(self._first, self._second)
 
         def __len__(self) -> int:
-            return len(self._combined_elements)
+            return len(frozenset(iter(self)))
 
     class _ClosedSets(_FiniteCollection[T]):
         """
@@ -423,3 +395,75 @@ class FiniteTopology(
             return "{0}(topology={1}, base_set={2})".format(
                 self.__class__.__name__, self._topology, self._set
             )
+
+    class _OpenNeighborhoodsForPoint(Collection[Collection[T]]):
+        """
+        The collection of open neighborhoods
+        """
+        def __init__(
+                self,
+                topology: FiniteTopologyInterface[T],
+                point: T
+        ) -> None:
+            self._topology = topology
+            self._point = point
+
+        def __iter__(self) -> Iterator[Collection[T]]:
+            return (
+                open_set for open_set in self._topology.open_sets
+                if self._point in open_set
+            )
+
+        def __len__(self) -> int:
+            """
+
+            :return: The number of open neighborhoods
+            """
+            return len(frozenset(self))
+
+        def __contains__(self, item: object) -> bool:
+            """
+
+            :param item: The open set to see if it is a neighborhood
+            :return:
+            """
+            return item in frozenset(self)
+
+    class _OpenNeighborhoodsForSet(Collection[Collection[T]]):
+        def __init__(
+                self,
+                topology: FiniteTopologyInterface[T],
+                container: Container[T]
+        ) -> None:
+            self._topology = topology
+            self._container = container
+
+        def __iter__(self) -> Iterator[Collection[T]]:
+            """
+
+            :return: The open neighborhoods
+            """
+            return (
+                open_set for open_set in self._topology.open_sets if
+                self._open_set_contains_container(open_set, self._container)
+            )
+
+        def __len__(self) -> int:
+            return len(frozenset(self))
+
+        def __contains__(self, item: object) -> bool:
+            return item in frozenset(self)
+
+        def _open_set_contains_container(
+                self,
+                open_set: Collection[T],
+                container: Container[T]
+        ) -> bool:
+            closed_set_has_container = any(
+                element in container for element
+                in self._topology.complement(open_set))
+            all_elements_in_container = all(
+                element in container for element in open_set
+            )
+
+            return all_elements_in_container and not closed_set_has_container

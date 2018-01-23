@@ -35,3 +35,17 @@ class EmptyContainerCollection(Collection[Container[T]], Generic[T]):
 
     def __iter__(self) -> Iterator[Container[T]]:
         return iter((EmptyContainer(),))
+
+
+class EmptyCollection(Collection[T], Generic[T]):
+    """
+    Descries a collection which has no elements
+    """
+    def __contains__(self, item: object) -> bool:
+        return False
+
+    def __len__(self) -> int:
+        return 0
+
+    def __iter__(self) -> Iterator[T]:
+        raise StopIteration()
