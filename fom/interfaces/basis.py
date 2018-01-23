@@ -5,7 +5,7 @@ a union of elements of the basis set
 import abc
 from collections.abc import Collection
 from typing import Set, Generic, TypeVar, FrozenSet, Union
-from src.interfaces.topologies.topology import Topology
+from fom.interfaces.topologies.topology import Topology
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]

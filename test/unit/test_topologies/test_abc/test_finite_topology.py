@@ -6,12 +6,12 @@ from hypothesis import given, assume
 from hypothesis.strategies import lists
 from test.unit.generators import topologies, topological_subsets
 from test.unit.generators import TopologicalSubset
-from src.interfaces import FiniteTopology, Topology
-from src.topologies import CustomTopology
+from fom.interfaces import FiniteTopology, Topology
+from fom.topologies import CustomTopology
 from functools import reduce
 from typing import List, TypeVar
 import operator
-from src.topologies import EmptyTopology
+from fom.topologies import EmptyTopology
 from itertools import product
 
 T = TypeVar('T')
@@ -86,13 +86,17 @@ class TestBoundary(TestFiniteTopology):
         """
         Check that the boundary of a set is closed
 
-        :param test_parameters: The topology and subset on which this test is to be
-            run
+        :param test_parameters: The topology and subset on which this test is
+            to be run
         """
-        self.assertIn(
-            test_parameters.topology.boundary(test_parameters.subset),
-            test_parameters.topology.closed_sets
+        boundary = frozenset(
+            test_parameters.topology.boundary(test_parameters.subset)
         )
+        closed_sets = frozenset(
+            frozenset(element) for element
+            in test_parameters.topology.closed_sets
+        )
+        self.assertIn(boundary, closed_sets)
 
     @given(topological_subsets())
     def test_boundary_is_equal_to_complement(

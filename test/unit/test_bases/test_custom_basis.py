@@ -4,8 +4,8 @@ A basis containing all the open sets of a topology is a basis for the topology.
 import unittest
 from hypothesis import given
 from test.unit.generators import topologies
-from src.interfaces import Topology
-from src.bases import CustomBasis
+from fom.interfaces import Topology
+from fom.bases import CustomBasis
 
 
 class TestCustomBasis(unittest.TestCase):

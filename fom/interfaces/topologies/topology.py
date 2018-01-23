@@ -2,7 +2,7 @@
 Provides the most general definition of topological space
 """
 import abc
-from typing import Generic, TypeVar, Union, Container
+from typing import Generic, TypeVar, Union, Container, Tuple, overload
 
 T = TypeVar('T')
 Y = TypeVar('Y')
@@ -17,12 +17,50 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
     * The intersection of any two open sets is in the set
     * The union of any two open sets is in the set
 
+    Each element in the set of sets are referred to as open sets
+
     .. note::
 
         Since this is the most general type of topology, this interface can
         only provide a class:`python.typing.Container` for the elements and
         open sets. This allows for representations of uncountably-infinite
         topologies. Finite topologies are refined in sub-interfaces.
+
+    .. note::
+
+        The definition of containment is a bit interesting when it comes to
+        :class:`python.typing.Container`. This because containers only
+        implement the ``__contains__`` function, which only answers whether
+        an element is in that container. Therefore, a set contains a container
+        iff all elements in that open set are in the container, and there is
+        no element in the topology that is in the container, but not in the
+        open set. The first table below shows an example of containment being
+        ``True``. The second table shows an example of containment being
+        ``False``.
+
+    +---------------------+----------------------+-----------------------+
+    | Element of Topology | Elements In Open Set | Elements In Container |
+    +---------------------+----------------------+-----------------------+
+    |       ``a``         |      ``a``           |     ``a``             |
+    +---------------------+----------------------+-----------------------+
+    |       ``b``         |      ``b``           |     ``b``             |
+    +---------------------+----------------------+-----------------------+
+    |       ``c``         |      ``c``           |                       |
+    +---------------------+----------------------+-----------------------+
+    |       ``d``         |                      |                       |
+    +---------------------+----------------------+-----------------------+
+
+    +---------------------+----------------------+-----------------------+
+    | Element of Topology | Elements In Open Set | Elements In Container |
+    +---------------------+----------------------+-----------------------+
+    |       ``a``         |      ``a``           |     ``a``             |
+    +---------------------+----------------------+-----------------------+
+    |       ``b``         |      ``b``           |     ``b``             |
+    +---------------------+----------------------+-----------------------+
+    |       ``c``         |      ``c``           |                       |
+    +---------------------+----------------------+-----------------------+
+    |       ``d``         |                      |     ``d``             |
+    +---------------------+----------------------+-----------------------+
 
     """
     @property
@@ -54,6 +92,32 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: T
+    ) -> Container[Container[T]]:
+        """
+
+        :param point_or_set: The point for which the open neighborhoods
+            need to be retrieved
+        :return: The open neighborhoods
+        """
+        pass
+
+    @abc.abstractmethod
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: Container[T]
+    ) -> Container[Container[T]]:
+        """
+
+        :param point_or_set: The set for which open neighborhoods are to be
+            obtained
+        :return: The open neighborhoods
+        """
+        pass
+
+    @abc.abstractmethod
     def get_open_neighborhoods(
             self, point_or_set: Union[T, Container[T]]
     ) -> Container[Container[T]]:
@@ -75,7 +139,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         :param subset: The subset of the elements of the topology for which
             the closure is to be calculated
         :return: The closure of the set. This is defined as the intersection of
-            all closed sets that contain the subset
+            all closed sets that contain the subset.
         """
         raise NotImplementedError()
 
@@ -111,7 +175,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: 'Topology[Y]') -> 'ProductTopology[T, Y]':
+    def __mul__(self, other: 'Topology[Y]') -> 'Topology[Tuple[T, Y]]':
         """
 
         :param other: The other topology against which this one is to be
@@ -121,7 +185,7 @@ class Topology(Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __eq__(self, other: 'Topology[T]') -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Axiomatic set theory states that two sets are equal iff their elements
         are equal. Using this axiom, let two topologies be equal iff their

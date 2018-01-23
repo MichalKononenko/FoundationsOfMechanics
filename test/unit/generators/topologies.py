@@ -1,6 +1,6 @@
 from hypothesis.strategies import composite, integers, frozensets
-from src.interfaces import FiniteTopology as AbstractTopology
-from src.topologies import RandomTopology
+from fom.interfaces import FiniteTopology as AbstractTopology
+from fom.topologies import RandomTopology
 
 
 @composite

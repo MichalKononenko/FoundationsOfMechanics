@@ -1,7 +1,7 @@
 """
 Contains a generator for a basis
 """
-from src.interfaces import Basis
+from fom.interfaces import Basis
 from .topologies import topologies
 from hypothesis.strategies import composite
 

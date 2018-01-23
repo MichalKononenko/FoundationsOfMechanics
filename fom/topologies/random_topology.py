@@ -1,8 +1,8 @@
 """
 Describes how to generate a random topology from a set of elements
 """
-from .finite_topology import FiniteTopology
-from typing import Set, TypeVar, Union, FrozenSet, Generic
+from fom.topologies.abc.finite_topology import FiniteTopology
+from typing import Set, TypeVar, Generic
 from random import randint, sample
 
 T = TypeVar('T')

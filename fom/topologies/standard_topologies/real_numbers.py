@@ -1,6 +1,6 @@
-from src.interfaces import Topology
-from src.intervals import OpenInterval
-from src.intervals import ClosedInterval
+from fom.interfaces import Topology
+from fom.intervals import OpenInterval
+from fom.intervals import ClosedInterval
 from typing import Container, Union, Collection
 
 

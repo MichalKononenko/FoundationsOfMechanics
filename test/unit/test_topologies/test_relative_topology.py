@@ -2,8 +2,8 @@
 Contains unit tests for relative topologies
 """
 import unittest
-from src.interfaces import Topology
-from src.topologies import RelativeTopology, CustomTopology
+from fom.interfaces import Topology
+from fom.topologies import RelativeTopology, CustomTopology
 from hypothesis import given, assume
 from test.unit.generators import topologies
 

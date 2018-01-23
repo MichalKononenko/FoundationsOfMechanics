@@ -3,10 +3,10 @@ Describes relative topologies. These are subsets of topologies formed by taking
 in a topology and a subset, and then intersecting the open sets with the
 subsets
 """
-from src.interfaces import Topology
-from src.topologies.finite_topology import FiniteTopology
+from fom.interfaces import Topology
+from fom.topologies.abc.finite_topology import FiniteTopology
 from typing import Set, TypeVar, Union, FrozenSet
-from src.exceptions import InvalidSubset
+from fom.exceptions import InvalidSubset
 
 T = TypeVar('T')
 ANY_SET = Union[Set[T], FrozenSet[T], set]

@@ -3,8 +3,8 @@ Describes a topology that contains a finite number of elements, and therefore
 a finite number of open sets
 """
 import abc
-from .topology import Topology, T
-from typing import Union, Set, Generic
+from .topology import Topology, T, Y
+from typing import Union, Generic, Container, Collection, Tuple, overload
 
 
 class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
@@ -12,10 +12,11 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
     Describes the interface for a topology with a finite number of open sets.
     This method specializes the return types in the topology interface for
     types that are better-suited to handling finite containers.
+
     """
     @property
     @abc.abstractmethod
-    def elements(self) -> Set[T]:
+    def elements(self) -> Collection[T]:
         """
 
         :return: The elements in the topology
@@ -24,7 +25,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def open_sets(self) -> Set[Set[T]]:
+    def open_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The open sets in the topology
@@ -33,7 +34,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def closed_sets(self) -> Set[Set[T]]:
+    def closed_sets(self) -> Collection[Collection[T]]:
         """
 
         :return: The closed sets for the topology. A closed set is a set whose
@@ -41,10 +42,39 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: T
+    ) -> Collection[Collection[T]]:
+        """
+        Return the open neighborhoods for a point, as per definition 1.1.1 of
+        Abraham and Marsden. The open neighborhoods for a point are the open
+        sets in the topology that contain the point
+
+        :param point_or_set: The point for which the open neighborhoods are to
+            be retrieved
+        :return: The open neighborhoods for the points
+        """
+
+    @overload
+    def get_open_neighborhoods(
+            self, point_or_set: Container[T]
+    ) -> Collection[Collection[T]]:
+        r"""
+        Return the open neighborhoods for a set of points. The open
+        neighborhoods for a set are all the open sets that contain the elements
+        in the given set. For instance, an open neighborhood of the set
+        ``{2, 3}`` is ``{2, 3, 4}`` if ``{2, 3, 4}`` is an open set.
+
+        :param point_or_set: The set for which the open neighborhoods are to be
+            obtained
+        :return: The open neighborhoods for the set
+        """
+
     @abc.abstractmethod
     def get_open_neighborhoods(
-            self, point_or_set: Union[T, Set[T]]
-    ) -> Set[Set[T]]:
+            self, point_or_set: Union[T, Container[T]]
+    ) -> Collection[Collection[T]]:
         """
 
         :param point_or_set: The point or set for which the open neighborhoods
@@ -57,7 +87,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def closure(self, subset: Set[T]) -> Set[T]:
+    def closure(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset of the elements of the topology for which
@@ -68,7 +98,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def interior(self, subset: Set[T]) -> Set[T]:
+    def interior(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the interior is to be calculated
@@ -78,7 +108,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def boundary(self, subset: Set[T]) -> Set[T]:
+    def boundary(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset for which the boundary is to be calculated
@@ -88,7 +118,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def complement(self, subset: Set[T]) -> Set[T]:
+    def complement(self, subset: Container[T]) -> Collection[T]:
         """
 
         :param subset: The subset of the topology for which the complement
@@ -99,7 +129,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __mul__(self, other: 'Topology[T]') -> 'Topology[T]':
+    def __mul__(self, other: Topology[Y]) -> Topology[Tuple[T, Y]]:
         """
 
         :param other: The other topology against which this one is to be
@@ -109,7 +139,7 @@ class FiniteTopology(Topology[T], Generic[T], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __eq__(self, other: 'Topology') -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Axiomatic set theory states that two sets are equal iff their elements
         are equal. Using this axiom, let two topologies be equal iff their
