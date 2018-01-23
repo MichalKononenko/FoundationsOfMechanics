@@ -1,6 +1,9 @@
 API For Interfaces
 ==================
 
+.. automodule:: fom.interfaces.__init__
+    :members:
+
 Basis
 ~~~~~
 

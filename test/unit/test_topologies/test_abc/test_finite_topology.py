@@ -86,13 +86,17 @@ class TestBoundary(TestFiniteTopology):
         """
         Check that the boundary of a set is closed
 
-        :param test_parameters: The topology and subset on which this test is to be
-            run
+        :param test_parameters: The topology and subset on which this test is
+            to be run
         """
-        self.assertIn(
-            test_parameters.topology.boundary(test_parameters.subset),
-            test_parameters.topology.closed_sets
+        boundary = frozenset(
+            test_parameters.topology.boundary(test_parameters.subset)
         )
+        closed_sets = frozenset(
+            frozenset(element) for element
+            in test_parameters.topology.closed_sets
+        )
+        self.assertIn(boundary, closed_sets)
 
     @given(topological_subsets())
     def test_boundary_is_equal_to_complement(

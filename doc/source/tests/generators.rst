@@ -1,7 +1,8 @@
 Generators
 ==========
 
-Contains documentation for the hypothesis test generators
+.. automodule:: test.unit.generators.__init__
+    :members:
 
 Topologies
 ----------
